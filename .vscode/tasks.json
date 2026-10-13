@@ -1,0 +1,42 @@
+﻿{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/api/Jyz/Jyz.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "vue: dev",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["--filter", "@vben/web-antd", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/web"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "ready in"
+        }
+      },
+      "presentation": {
+        "group": "fullstack",
+        "reveal": "always"
+      }
+    }
+  ]
+}

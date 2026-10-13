@@ -1,0 +1,46 @@
+{
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "codeLogin": "验证码登录",
+    "qrcodeLogin": "二维码登录",
+    "forgetPassword": "忘记密码",
+    "profile": "个人中心"
+  },
+  "profile": {
+    "title": "个人中心",
+    "tabs": {
+      "basic": "基本设置",
+      "password": "修改密码"
+    },
+    "password": {
+      "oldPasswordLabel": "旧密码",
+      "oldPasswordPlaceholder": "请输入旧密码",
+      "oldPasswordRequired": "请输入旧密码",
+      "newPasswordLabel": "新密码",
+      "newPasswordPlaceholder": "请输入新密码",
+      "newPasswordRequired": "请输入新密码",
+      "newPasswordMin": "密码长度不能少于6位",
+      "confirmPasswordLabel": "确认密码",
+      "confirmPasswordPlaceholder": "请再次输入新密码",
+      "confirmPasswordRequired": "请再次输入新密码",
+      "confirmPasswordMismatch": "两次输入的密码不一致",
+      "changeSuccess": "密码修改成功，请重新登录"
+    }
+  },
+  "dashboard": {
+    "title": "概览",
+    "analytics": "分析页",
+    "workspace": "工作台"
+  },
+  "system": {
+    "title": "系统管理",
+    "user": "用户管理",
+    "role": "角色管理",
+    "permission": "权限管理",
+    "auditLog": "操作日志",
+    "loginLog": "登录日志",
+    "dict": "数据字典",
+    "redisCache": "缓存管理"
+  }
+}

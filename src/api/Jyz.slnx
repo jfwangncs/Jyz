@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Jyz\Jyz.csproj" />
+  <Project Path="Jyz.UnitTests\Jyz.UnitTests.csproj" />
+</Solution>

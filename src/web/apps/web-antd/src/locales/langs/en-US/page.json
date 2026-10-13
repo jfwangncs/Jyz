@@ -1,0 +1,46 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "codeLogin": "Code Login",
+    "qrcodeLogin": "Qr Code Login",
+    "forgetPassword": "Forget Password",
+    "profile": "Profile"
+  },
+  "profile": {
+    "title": "Profile",
+    "tabs": {
+      "basic": "Basic Settings",
+      "password": "Change Password"
+    },
+    "password": {
+      "oldPasswordLabel": "Current Password",
+      "oldPasswordPlaceholder": "Please enter your current password",
+      "oldPasswordRequired": "Please enter your current password",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "Please enter a new password",
+      "newPasswordRequired": "Please enter a new password",
+      "newPasswordMin": "Password must be at least 6 characters",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Please enter the new password again",
+      "confirmPasswordRequired": "Please confirm your new password",
+      "confirmPasswordMismatch": "The two passwords do not match",
+      "changeSuccess": "Password changed successfully. Please sign in again"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "analytics": "Analytics",
+    "workspace": "Workspace"
+  },
+  "system": {
+    "title": "System Management",
+    "user": "User Management",
+    "role": "Role Management",
+    "permission": "Permission Management",
+    "auditLog": "Audit Log",
+    "loginLog": "Login Log",
+    "dict": "Data Dictionary",
+    "redisCache": "Cache Management"
+  }
+}
