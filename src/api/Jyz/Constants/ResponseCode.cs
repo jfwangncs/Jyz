@@ -1,5 +1,8 @@
 ﻿namespace Jyz.Constants
 {
+    /// <summary>
+    /// Standard response status codes used in BaseResponse envelopes.
+    /// </summary>
     public enum ResponseCode
     {
         Success = 0,
