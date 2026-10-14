@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 This file provides guidance to AI coding agents when working with this repository. It follows the [agents.md](https://agents.md) standard so any compliant tool can read it directly.
 
@@ -6,8 +6,8 @@ This file provides guidance to AI coding agents when working with this repositor
 
 This is a full-stack application generated from the JfYu.Template.
 
-- **`src/api/`** 鈥?ASP.NET Core 10 Web API backend. See `src/api/AGENTS.md` for stack-specific conventions.
-- **`src/web/`** 鈥?Vue 3 + TypeScript + Vite monorepo frontend. See `src/web/AGENTS.md` for stack-specific conventions.
+- **`src/api/`** — ASP.NET Core 10 Web API backend. See `src/api/AGENTS.md` for stack-specific conventions.
+- **`src/web/`** — Vue 3 + TypeScript + Vite monorepo frontend. See `src/web/AGENTS.md` for stack-specific conventions.
 
 ## Working Across the Stack
 
@@ -22,8 +22,8 @@ For a complete, tool-agnostic step-by-step workflow, see [`docs/fullstack-featur
 
 ### How to use the feature guide
 
-This guide does not auto-trigger 鈥?tell your AI coding agent to follow it explicitly when starting a new feature module, e.g.:
+This guide does not auto-trigger — tell your AI coding agent to follow it explicitly when starting a new feature module, e.g.:
 
 > Read `docs/fullstack-feature-guide.md` and follow it step by step to implement a `<FeatureName>` module.
 
-The guide contains checkpoints where the agent should pause and ask you to review DB fields and permission codes before continuing 鈥?expect to be prompted mid-way, not just at the end.
+The guide contains checkpoints where the agent should pause and ask you to review DB fields and permission codes before continuing — expect to be prompted mid-way, not just at the end.

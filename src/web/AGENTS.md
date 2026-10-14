@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 This file provides guidance to AI coding agents when working with code in this repository.
 
@@ -6,7 +6,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 1. Vue 3 + TypeScript + Vite monorepo project based on **pnpm workspaces** + **Turborepo**.
 2. Based on the **Vben Admin** template; only the **Ant Design Vue** variant is kept (alternative UI variants in upstream Vben were removed). Core UI is built on TailwindCSS + shadcn-vue.
-3. Requires Node 鈮?20.19.0 and pnpm 鈮?10.
+3. Requires Node ≥ 20.19.0 and pnpm ≥ 10.
 4. Uses **prettier** + **eslint** + **stylelint** for code linting and formatting.
 5. Uses **vitest** for unit testing.
 6. Uses **commitlint** for commit message conventions.
@@ -79,7 +79,7 @@ scripts/
 
 Each app's `src/main.ts` calls `bootstrap(namespace)` (defined in `src/bootstrap.ts`), which executes in order:
 
-1. Initializes the **component adapter** (`src/adapter/component/index.ts`) 鈥?maps generic form component names to concrete UI library components.
+1. Initializes the **component adapter** (`src/adapter/component/index.ts`) — maps generic form component names to concrete UI library components.
 2. Calls `initSetupVbenForm()` (`src/adapter/form.ts`) to configure the generic form system.
 3. Sequentially initializes i18n, Pinia stores, permission directives, Tippy, router, and MotionPlugin, then mounts to `#app`.
 
@@ -135,7 +135,7 @@ All stores are initialized together via `initStores(app, { namespace })` from `@
 - **Pre-commit hook** (lefthook): Automatically runs prettier + eslint + stylelint on staged files. Use `pnpm commit` (czg) for guided commits.
 - **Adding new pages**: Create a `.vue` file under `src/views/`, add a route module under `src/router/routes/modules/`; if using backend mode, also ensure the backend API returns the corresponding menu data.
 - **Internationalization**: Use `$t('key')` throughout; locale files are in `packages/locales/`, and app-level i18n files are in `src/locales/langs`.
-- **Error messages come from the backend**: The .NET API returns `message` already localized by `Accept-Language` (see `src/api/Jyz/Resources/EnumMessages.*.resx`). Do **not** create frontend `error.json` files or map `errorCode` to local strings 鈥?`request.ts` shows `response.data.message` directly.
+- **Error messages come from the backend**: The .NET API returns `message` already localized by `Accept-Language` (see `src/api/Jyz/Resources/EnumMessages.*.resx`). Do **not** create frontend `error.json` files or map `errorCode` to local strings — `request.ts` shows `response.data.message` directly.
 
 ## Modification Boundaries (IMPORTANT)
 
@@ -143,26 +143,26 @@ This project is based on the **Vben Admin** framework, which ships as a Monorepo
 
 ### Allowed (write freely)
 
-- `apps/web-antd/src/views/**` 鈥?business pages
-- `apps/web-antd/src/api/**` 鈥?API clients for our backend
-- `apps/web-antd/src/router/routes/modules/**` 鈥?business route modules
-- `apps/web-antd/src/locales/langs/**` 鈥?business i18n strings
-- `apps/web-antd/src/store/**` 鈥?app-scoped Pinia stores (NOT the global ones in `packages/stores`)
-- `apps/web-antd/src/adapter/**` 鈥?the **only** sanctioned place to extend / override framework defaults (form components, vxe-table presets, etc.)
+- `apps/web-antd/src/views/**` — business pages
+- `apps/web-antd/src/api/**` — API clients for our backend
+- `apps/web-antd/src/router/routes/modules/**` — business route modules
+- `apps/web-antd/src/locales/langs/**` — business i18n strings
+- `apps/web-antd/src/store/**` — app-scoped Pinia stores (NOT the global ones in `packages/stores`)
+- `apps/web-antd/src/adapter/**` — the **only** sanctioned place to extend / override framework defaults (form components, vxe-table presets, etc.)
 
 ### Read-only (do not modify)
 
-- `packages/**` 鈥?Vben framework code (`@core`, `effects`, `stores`, `preferences`, `locales`, `icons`, `utils`, `types`, `constants`, `styles`)
-- `internal/**` 鈥?build / lint / tsconfig / vite-config tooling
-- `scripts/**` 鈥?CLI tools (`vsh`, `turbo-run`)
-- `apps/web-antd/src/{main.ts, bootstrap.ts, preferences.ts, layouts/**}` 鈥?framework wiring; only edit if absolutely required and document why
+- `packages/**` — Vben framework code (`@core`, `effects`, `stores`, `preferences`, `locales`, `icons`, `utils`, `types`, `constants`, `styles`)
+- `internal/**` — build / lint / tsconfig / vite-config tooling
+- `scripts/**` — CLI tools (`vsh`, `turbo-run`)
+- `apps/web-antd/src/{main.ts, bootstrap.ts, preferences.ts, layouts/**}` — framework wiring; only edit if absolutely required and document why
 
 ### When you need behavior the framework doesn't expose
 
 1. Try the adapter layer first (`apps/web-antd/src/adapter/`).
 2. Wrap the framework component in a thin business component under `apps/web-antd/src/components/`.
 3. Add a Pinia store / composable under `apps/web-antd/src/`.
-4. Only as a last resort modify `packages/**` 鈥?and record the file + reason in the upgrade log below so it can be re-applied after a Vben upgrade.
+4. Only as a last resort modify `packages/**` — and record the file + reason in the upgrade log below so it can be re-applied after a Vben upgrade.
 
 ### Upgrade workflow
 
@@ -176,15 +176,15 @@ We do **not** track Vben as a git remote (the upstream repo's root layout differ
    ```
 3. Resolve any conflicts. They should only land inside `packages/**` or `internal/**` if the rules above were followed.
 4. Run `pnpm install`, `pnpm lint`, `pnpm test:coverage`, `pnpm -F @vben/web-antd build` to verify.
-5. Commit with message `chore(vben): cherry-pick <sha> 鈥?<subject>` so future maintainers can audit applied upstream changes.
+5. Commit with message `chore(vben): cherry-pick <sha> — <subject>` so future maintainers can audit applied upstream changes.
 
-If `git apply` rejects too many hunks, manually open the upstream files on GitHub and copy the changes file-by-file 鈥?easier than fighting the patch tool.
+If `git apply` rejects too many hunks, manually open the upstream files on GitHub and copy the changes file-by-file — easier than fighting the patch tool.
 
 ### Removed framework pieces
 
 The following were dropped from the upstream Vben repo because we don't use them. **Do not re-introduce them when upgrading**:
 
-- `apps/web-ele`, `apps/web-naive`, `apps/web-tdesign`, `apps/web-antdv-next` 鈥?alternative UI library variants
-- `apps/playground` 鈥?component playground
-- `apps/docs` 鈥?VitePress documentation site
-- `apps/backend-mock` 鈥?Nitro mock server (we use the real .NET backend)
+- `apps/web-ele`, `apps/web-naive`, `apps/web-tdesign`, `apps/web-antdv-next` — alternative UI library variants
+- `apps/playground` — component playground
+- `apps/docs` — VitePress documentation site
+- `apps/backend-mock` — Nitro mock server (we use the real .NET backend)

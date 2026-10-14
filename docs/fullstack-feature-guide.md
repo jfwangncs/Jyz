@@ -1,4 +1,4 @@
-﻿# Implement a Backend Feature Module
+# Implement a Backend Feature Module
 
 Tool-agnostic step-by-step guide for implementing a complete full-stack feature module (backend + frontend) in this repository: adding a new entity, CRUD endpoints, service, or any module in `src/api` AND the corresponding Vue frontend. Covers DB schema design with user review, Entity + AppDbContext, Request/Response DTOs, FluentValidation, ErrorCode assignment (4000+ range), Options config, Service interface + implementation (JfYu.Data), DI registration, Controller (CustomController), Vue router, API file (requestClient), VxeGrid list page, drawer form, and i18n locales (zh-CN + en-US system/page JSON; error messages are localized on the backend).
 
@@ -18,7 +18,7 @@ Before starting, identify the module type:
 
 **If Client-Side Paged**:
 
-- **Skip** the server-side `QueryRequest` / `GetPagedAsync` 鈥?the API returns `List<T>` or equivalent
+- **Skip** the server-side `QueryRequest` / `GetPagedAsync` — the API returns `List<T>` or equivalent
 - **Frontend `query`**: fetch all items, apply client-side filter (`Array.filter`), slice for the current page
 - **`pagerConfig`**: set `{ pageSize: 20, pageSizes: [10,20,50,100] }` explicitly in grid options
 - **`checkboxConfig`**: specify `{ key: '<fieldName>' }` if the keyField is not `id`
@@ -27,8 +27,8 @@ Before starting, identify the module type:
 
 **If Read-Only (Log)**:
 
-- **Skip** Step 3 `Create<Name>Request` and `Update<Name>Request` 鈥?only `<Name>Response` needed
-- **Skip** Step 4 Validations 鈥?nothing to validate on input
+- **Skip** Step 3 `Create<Name>Request` and `Update<Name>Request` — only `<Name>Response` needed
+- **Skip** Step 4 Validations — nothing to validate on input
 - **Service interface**: only query methods, no `IService<T, TContext>` inheritance needed (or inherit but expose no write methods)
 - **Controller**: only `GET` (list + detail), no `POST`/`PUT`. Use `[Authorize]` instead of write-action `[Permission]` codes
 - **Frontend**: no "Create" button in toolbar, no `form.vue` drawer, list page is read-only
@@ -36,24 +36,24 @@ Before starting, identify the module type:
 
 ---
 
-## Step 1 鈥?Analyze Database Requirements
+## Step 1 — Analyze Database Requirements
 
 1. Determine if a **new table** or **modification to an existing table** is needed.
 2. List the proposed fields with:
    - Field name (PascalCase)
-   - C# type (string, int, decimal, DateTime, bool, enum, 鈥?
+   - C# type (string, int, decimal, DateTime, bool, enum, …)
    - Constraints: `[Required]`, `[MaxLength(n)]`, nullable `?`, default value
    - Relationships: navigation properties and FK conventions
-3. **Note**: `BaseEntity` already provides `Id` (int), `Status`, `CreatedTime`, `UpdatedTime` 鈥?do NOT redeclare these.
+3. **Note**: `BaseEntity` already provides `Id` (int), `Status`, `CreatedTime`, `UpdatedTime` — do NOT redeclare these.
 
-> **鈴?CHECKPOINT 鈥?Present fields to the user for review before coding.**
+> **⏸ CHECKPOINT — Present fields to the user for review before coding.**
 > Ask: "Are these fields correct? Any changes, additions, or removals?"
 
 ---
 
-## Step 2 鈥?Create / Modify Entity
+## Step 2 — Create / Modify Entity
 
-**New entity** 鈫?create `src/api/Jyz/Entity/<Name>.cs`:
+**New entity** → create `src/api/Jyz/Entity/<Name>.cs`:
 
 ```csharp
 using JfYu.Data.Model;
@@ -74,7 +74,7 @@ namespace JfYu.WebApi.Template.Entity
 }
 ```
 
-**Register in AppDbContext** 鈫?add `DbSet<T>` to `Entity/AppDbContext.cs`:
+**Register in AppDbContext** → add `DbSet<T>` to `Entity/AppDbContext.cs`:
 
 ```csharp
 public DbSet<Product> Products { get; set; }
@@ -89,7 +89,7 @@ dotnet ef database update --project src/api/Jyz
 
 ---
 
-## Step 3 鈥?Create DTOs
+## Step 3 — Create DTOs
 
 Create a **module folder** under `src/api/Jyz/Model/<Name>/` and place all DTOs there:
 
@@ -112,14 +112,14 @@ Model/
 
 Namespace convention: `JfYu.WebApi.Template.Model.<Name>` (matches the folder, e.g. `JfYu.WebApi.Template.Model.Product`).
 
-Use plain C# classes 鈥?no inheritance needed.
+Use plain C# classes — no inheritance needed.
 
-### Update request 鈥?nullable fields / partial update contract
+### Update request — nullable fields / partial update contract
 
 **All fields in `Update<Name>Request` must be nullable.** The frontend only sends fields that actually changed; the controller applies only the fields that are non-null.
 
 ```csharp
-// 鉁?Correct 鈥?every field nullable
+// ✅ Correct — every field nullable
 public class UpdateProductRequest
 {
     public string? Name { get; set; }
@@ -128,7 +128,7 @@ public class UpdateProductRequest
 }
 ```
 
-Controller apply-pattern 鈥?guard every field before assigning:
+Controller apply-pattern — guard every field before assigning:
 
 ```csharp
 if (request.Name != null)        item.Name = request.Name;
@@ -136,7 +136,7 @@ if (request.Price.HasValue)      item.Price = request.Price.Value;
 if (request.Status.HasValue)     item.Status = request.Status.Value;
 ```
 
-Frontend `UpdateParams` mirrors this: every property is optional (`?`). Callers only include changed keys in the payload 鈥?omitted keys are simply not sent.
+Frontend `UpdateParams` mirrors this: every property is optional (`?`). Callers only include changed keys in the payload — omitted keys are simply not sent.
 
 ```ts
 export interface UpdateProductParams {
@@ -146,11 +146,11 @@ export interface UpdateProductParams {
 }
 ```
 
-> This means a status-only toggle (`{ status: 0 }`) and a full form save both use the same `PUT /{id}` endpoint 鈥?**no separate toggle endpoint is needed**.
+> This means a status-only toggle (`{ status: 0 }`) and a full form save both use the same `PUT /{id}` endpoint — **no separate toggle endpoint is needed**.
 
 ---
 
-## Step 4 鈥?Create Validations
+## Step 4 — Create Validations
 
 Create validation files in `src/api/Jyz/Validations/` for each request DTO:
 
@@ -177,30 +177,30 @@ namespace JfYu.WebApi.Template.Validations
 
 Use the module namespace `JfYu.WebApi.Template.Model.<Name>` matching the DTO folder.
 
-Validators are **auto-discovered** 鈥?no manual registration needed.
+Validators are **auto-discovered** — no manual registration needed.
 
 ---
 
-## Step 5 鈥?Assign Error Codes
+## Step 5 — Assign Error Codes
 
 Open `src/api/Jyz/Constants/ErrorCode.cs`.
 
-**Current module ranges** (4000+ space, 50鈥?00 codes per module):
+**Current module ranges** (4000+ space, 50–100 codes per module):
 
 | Range     | Module                |
 | --------- | ---------------------- |
-| 4000鈥?049 | General client errors |
-| 4100鈥?149 | Auth                  |
-| 4150鈥?199 | User                  |
-| 4200鈥?249 | Role                  |
-| 4250鈥?299 | Permission            |
+| 4000–4049 | General client errors |
+| 4100–4149 | Auth                  |
+| 4150–4199 | User                  |
+| 4200–4249 | Role                  |
+| 4250–4299 | Permission            |
 | 4300+     | Other / unassigned    |
 
 **Decision logic**:
 
-- Error clearly belongs to an **existing module** 鈫?add under that module's `#region`, continuing its sequential values. If it overflows, let the user know.
-- Error is for a **new module** 鈫?start a new `#region` at the next available 50-step boundary (e.g., 4250, 4300 if free) and comment the range.
-- Ambiguous 鈫?assign to the closest existing module.
+- Error clearly belongs to an **existing module** → add under that module's `#region`, continuing its sequential values. If it overflows, let the user know.
+- Error is for a **new module** → start a new `#region` at the next available 50-step boundary (e.g., 4250, 4300 if free) and comment the range.
+- Ambiguous → assign to the closest existing module.
 
 **Pattern**:
 
@@ -226,7 +226,7 @@ Then add the display text to the resource files (keys follow `ErrorCode.{MemberN
 
 ```xml
 <data name="ErrorCode.ProductNotFound" xml:space="preserve">
-  <value>鍟嗗搧涓嶅瓨鍦ㄣ€?/value>
+  <value>商品不存在。</value>
 </data>
 ```
 
@@ -234,7 +234,7 @@ To add another language (e.g., French, German), add `EnumMessages.fr.resx` / `En
 
 ---
 
-## Step 6 鈥?Options Configuration (if needed)
+## Step 6 — Options Configuration (if needed)
 
 Only when the feature requires settings stored in `appsettings.json` (no secrets/passwords).
 
@@ -260,11 +260,11 @@ services.Configure<ProductSettings>(configuration.GetSection("ProductSettings"))
 
 ---
 
-## Step 7 鈥?Create Service Interface + Implementation
+## Step 7 — Create Service Interface + Implementation
 
 ### Interface: `Services/Interfaces/I<Name>Service.cs`
 
-- **With DB access** 鈫?inherit `IService<TEntity, AppDbContext>`:
+- **With DB access** → inherit `IService<TEntity, AppDbContext>`:
 
 ```csharp
 public interface IProductService : IService<Product, AppDbContext>
@@ -273,18 +273,18 @@ public interface IProductService : IService<Product, AppDbContext>
 }
 ```
 
-- **Without DB access** 鈫?plain interface, no inheritance.
+- **Without DB access** → plain interface, no inheritance.
 
 ### Implementation: `Services/<Name>Service.cs`
 
-- **With DB access** 鈫?inherit `Service<TEntity, AppDbContext>`:
+- **With DB access** → inherit `Service<TEntity, AppDbContext>`:
 
 > **Note**: The base class `Service<TEntity, AppDbContext>` provides two protected fields:
 >
-> - `_context` 鈥?the write `AppDbContext` (for INSERT / UPDATE / DELETE + `SaveChangesAsync`)
-> - `_readonlyContext` 鈥?the read-only `ReadonlyDBContext<AppDbContext>` (for queries, no tracking)
+> - `_context` — the write `AppDbContext` (for INSERT / UPDATE / DELETE + `SaveChangesAsync`)
+> - `_readonlyContext` — the read-only `ReadonlyDBContext<AppDbContext>` (for queries, no tracking)
 >
-> Also inherits: `AddAsync`, `UpdateAsync`, `RemoveAsync` (soft delete), `HardRemoveAsync` (hard delete), `GetOneAsync`, `GetListAsync`, `GetSelectListAsync` 鈥?do **NOT** re-implement these. `GetPagedAsync` is **not** inherited 鈥?define it per service using `IQueryable.ToPagedAsync()`.
+> Also inherits: `AddAsync`, `UpdateAsync`, `RemoveAsync` (soft delete), `HardRemoveAsync` (hard delete), `GetOneAsync`, `GetListAsync`, `GetSelectListAsync` — do **NOT** re-implement these. `GetPagedAsync` is **not** inherited — define it per service using `IQueryable.ToPagedAsync()`.
 
 ```csharp
 using JfYu.Data.Context;
@@ -333,14 +333,14 @@ namespace JfYu.WebApi.Template.Services
 > return Ok(result.Adapt<PagedResult<ProductResponse>>());
 > ```
 
-- **Without DB access** 鈫?plain class implementing the interface.
+- **Without DB access** → plain class implementing the interface.
 
-**Business errors** 鈫?throw `BusinessException(ErrorCode.XxxError)` 鈥?the global handler converts these to structured `BadRequest` responses automatically.
+**Business errors** → throw `BusinessException(ErrorCode.XxxError)` — the global handler converts these to structured `BadRequest` responses automatically.
 Every business error needs to map to one error code.
 
 ---
 
-## Step 8 鈥?Register DI
+## Step 8 — Register DI
 
 Add to `Extensions/InjectionExtension.cs` inside `AddCustomInjection()`:
 
@@ -350,7 +350,7 @@ services.AddScoped<IProductService, ProductService>();
 //#endif
 ```
 
-**Feature flag rules** 鈥?wrap DI registration in the appropriate flag:
+**Feature flag rules** — wrap DI registration in the appropriate flag:
 
 | Scenario                                  | Flag                   |
 | ------------------------------------------ | ----------------------- |
@@ -360,18 +360,18 @@ services.AddScoped<IProductService, ProductService>();
 | Redis-backed service                      | `#if (EnableJWTRedis)` |
 | Pure utility service (no external deps)   | No flag needed         |
 
-> Most new feature modules use EF Core 鈫?wrap in `#if (EnableRBAC)`.
+> Most new feature modules use EF Core → wrap in `#if (EnableRBAC)`.
 
 ---
 
-## Step 9 鈥?Permission Codes
+## Step 9 — Permission Codes
 
 Open `src/api/Jyz/Constants/PermissionCodes.cs` and add constants for the new module.
 
 **Convention**:
 
-- Module entry (Menu) 鈫?`public const string <Name> = "<name>";` 鈥?**value is lowercase**
-- Each action 鈫?`public const string <Name><Action> = "<name>:<action>";` 鈥?**both parts lowercase**
+- Module entry (Menu) → `public const string <Name> = "<name>";` — **value is lowercase**
+- Each action → `public const string <Name><Action> = "<name>:<action>";` — **both parts lowercase**
 
 ```csharp
 public const string Product = "product";
@@ -393,23 +393,23 @@ public const string ProductDelete = "product:delete";
 **Parent code** determines where this module appears in the permission tree:
 
 - Check existing top-level constants (e.g., `System = "system"`, `Dashboard = "dashboard"`).
-- If the module clearly belongs to an existing parent 鈫?use it directly.
-- If uncertain or no suitable parent exists 鈫?**ask the user** before proceeding.
+- If the module clearly belongs to an existing parent → use it directly.
+- If uncertain or no suitable parent exists → **ask the user** before proceeding.
 
-> **鈴?CHECKPOINT 鈥?Confirm parent code with user if not obvious.**
+> **⏸ CHECKPOINT — Confirm parent code with user if not obvious.**
 > Ask: "This module's menu permission will be placed under `PermissionCodes.System`. Is that correct, or should it be under a different parent?"
 
-> **鈴?CHECKPOINT 鈥?Before writing controller, confirm with user:**
+> **⏸ CHECKPOINT — Before writing controller, confirm with user:**
 > "Here is the planned permission code set: `product`, `product:get`, `product:add`, `product:edit`. Does this look right? Any actions to add or remove?"
 
 ---
 
-## Step 10 鈥?Create Controller
+## Step 10 — Create Controller
 
 Create `Controllers/<Name>Controller.cs`.
 
-- The **class** gets `[Permission(PermissionCodes.<Name>, PermissionType.Menu, parentCode: PermissionCodes.<Parent>)]` 鈥?this registers it as a menu entry.
-- Each **action method** gets `[Permission(PermissionCodes.<Name><Action>)]` 鈥?type defaults to `Button`.
+- The **class** gets `[Permission(PermissionCodes.<Name>, PermissionType.Menu, parentCode: PermissionCodes.<Parent>)]` — this registers it as a menu entry.
+- Each **action method** gets `[Permission(PermissionCodes.<Name><Action>)]` — type defaults to `Button`.
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -478,22 +478,22 @@ namespace JfYu.WebApi.Template.Controllers
 
 **Conventions**:
 
-- Always return `IActionResult` 鈥?never `ActionResult<T>` or raw objects.
+- Always return `IActionResult` — never `ActionResult<T>` or raw objects.
 - Use `Ok<T>(data)` / `Ok()` / `BadRequest(ErrorCode)` from `CustomController`.
-- Do NOT use `[Authorize]` directly 鈥?`[Permission]` handles authentication + authorization.
-- All methods must be async 鈥?no `.Result` or `.Wait()`.
+- Do NOT use `[Authorize]` directly — `[Permission]` handles authentication + authorization.
+- All methods must be async — no `.Result` or `.Wait()`.
 - Add `[Required]` on `[FromBody]` parameters.
 
 ---
 
-## Step 11 鈥?Frontend: Router
+## Step 11 — Frontend: Router
 
-> **Modification boundary (Vben Admin):** All business code MUST live under `src/web/apps/web-antd/src/`. Never edit `src/web/packages/**`, `src/web/internal/**`, `src/web/scripts/**`, or `src/web/apps/web-antd/src/{main.ts,bootstrap.ts,preferences.ts,layouts/**}` 鈥?those are upstream Vben framework files and modifying them makes future framework upgrades painful. Extend the framework only via `apps/web-antd/src/adapter/**` or by wrapping in business components under `apps/web-antd/src/components/`. See [src/web/AGENTS.md](../src/web/AGENTS.md) 搂"Modification Boundaries" for the full policy.
+> **Modification boundary (Vben Admin):** All business code MUST live under `src/web/apps/web-antd/src/`. Never edit `src/web/packages/**`, `src/web/internal/**`, `src/web/scripts/**`, or `src/web/apps/web-antd/src/{main.ts,bootstrap.ts,preferences.ts,layouts/**}` — those are upstream Vben framework files and modifying them makes future framework upgrades painful. Extend the framework only via `apps/web-antd/src/adapter/**` or by wrapping in business components under `apps/web-antd/src/components/`. See [src/web/AGENTS.md](../src/web/AGENTS.md) §"Modification Boundaries" for the full policy.
 
 Check `src/web/apps/web-antd/src/router/routes/modules/`.
 
-- **Existing domain file** (e.g., `system.ts`) 鈫?add a child route entry.
-- **New domain** 鈫?create `<domain>.ts` and add its default export to `src/router/routes/index.ts`.
+- **Existing domain file** (e.g., `system.ts`) → add a child route entry.
+- **New domain** → create `<domain>.ts` and add its default export to `src/router/routes/index.ts`.
 
 Route pattern:
 
@@ -511,12 +511,12 @@ Route pattern:
 
 ---
 
-## Step 12 鈥?Frontend: API File
+## Step 12 — Frontend: API File
 
 Create `src/web/apps/web-antd/src/api/system/<domain>.ts`:
 
 > **Note**: API files for features live in `src/api/system/`, **not** `src/api/core/`.
-> Export chain: `src/api/system/<domain>.ts` 鈫?`src/api/system/index.ts` 鈫?re-exported by `src/api/core/index.ts` (via `export * from '../system'`) 鈫?`src/api/index.ts` (via `export * from './core'`)
+> Export chain: `src/api/system/<domain>.ts` → `src/api/system/index.ts` → re-exported by `src/api/core/index.ts` (via `export * from '../system'`) → `src/api/index.ts` (via `export * from './core'`)
 
 ```ts
 import { requestClient } from "#/api/request";
@@ -575,7 +575,7 @@ export * from "./<domain>";
 
 ---
 
-## Step 13 鈥?Frontend: Views (based on Role module template)
+## Step 13 — Frontend: Views (based on Role module template)
 
 Create three files mirroring the role module structure:
 
@@ -611,7 +611,7 @@ export function useColumns<T = SystemProductApi.SystemProduct>(
   return [
     // ... other columns ...
     {
-      // Status toggle column 鈥?use CellSwitch when onStatusChange is provided, CellTag otherwise
+      // Status toggle column — use CellSwitch when onStatusChange is provided, CellTag otherwise
       cellRender: {
         attrs: { beforeChange: onStatusChange },
         name: onStatusChange ? "CellSwitch" : "CellTag",
@@ -627,7 +627,7 @@ export function useColumns<T = SystemProductApi.SystemProduct>(
 
 ### `src/views/<domain>/<name>/modules/form.vue`
 
-Drawer form for create/edit 鈥?uses `useVbenForm` + `useVbenDrawer`:
+Drawer form for create/edit — uses `useVbenForm` + `useVbenDrawer`:
 
 ```vue
 <script lang="ts" setup>
@@ -672,7 +672,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
 ### `src/views/<domain>/<name>/index.vue`
 
-Main list page 鈥?uses `useVbenVxeGrid` with proxy config pointing to the list API:
+Main list page — uses `useVbenVxeGrid` with proxy config pointing to the list API:
 
 > **Critical**: Always use `<Page auto-content-height>` on list pages that use `height: 'auto'` on VxeGrid.
 > Without `auto-content-height`, the grid has no fixed-height parent and enters an infinite ResizeObserver
@@ -692,24 +692,24 @@ Main list page 鈥?uses `useVbenVxeGrid` with proxy config pointing to the list 
 > </template>
 > ```
 
-> **Toolbar visibility rule**: The VxeGrid toolbar only renders when it has content 鈥?either a
+> **Toolbar visibility rule**: The VxeGrid toolbar only renders when it has content — either a
 > `table-title` prop OR a `#toolbar-actions` slot. Without one of these, the built-in `refresh`,
 > `search`, and `custom` buttons will NOT appear even if set in `toolbarConfig`.
 >
-> - CRUD pages: have `#toolbar-actions` (Create button) 鈫?toolbar renders automatically.
+> - CRUD pages: have `#toolbar-actions` (Create button) → toolbar renders automatically.
 > - Read-Only (Log) pages: **must** add `:table-title="$t('system.<module>.list')"` on `<Grid>`.
 
 > **Icons**: Use named Lucide icon components from `@vben/icons` (e.g. `Plus`, `Pencil`).
-> Do NOT import from `@ant-design/icons-vue` 鈥?that package is not available in this project.
+> Do NOT import from `@ant-design/icons-vue` — that package is not available in this project.
 
-> **Toolbar refresh rule**: Always set `refresh: true` in `toolbarConfig` 鈥?this uses VxeGrid's built-in
+> **Toolbar refresh rule**: Always set `refresh: true` in `toolbarConfig` — this uses VxeGrid's built-in
 > refresh button. **Never** add a manual `<Button>` with `RotateCw` in `#toolbar-actions` for refresh.
 > The `#toolbar-actions` slot is ONLY for action buttons like "Create".
 >
 > **`gridApi` rule**:
 >
-> - CRUD pages: destructure `[Grid, gridApi]` 鈥?`gridApi.query()` is called via `onRefresh()` when a form drawer emits `success`.
-> - Read-only (Log) pages: destructure `[Grid]` only 鈥?no `gridApi`, no `onRefresh`, no `#toolbar-actions` slot.
+> - CRUD pages: destructure `[Grid, gridApi]` — `gridApi.query()` is called via `onRefresh()` when a form drawer emits `success`.
+> - Read-only (Log) pages: destructure `[Grid]` only — no `gridApi`, no `onRefresh`, no `#toolbar-actions` slot.
 
 **CRUD module** (`index.vue` with Create button):
 
@@ -747,7 +747,7 @@ const [Grid, gridApi] = useVbenVxeGrid({
     toolbarConfig: {
       custom: true,
       export: false,
-      refresh: true, // 鈫?built-in refresh button; never add a manual one
+      refresh: true, // ← built-in refresh button; never add a manual one
       search: true,
       zoom: false,
     },
@@ -774,7 +774,7 @@ function confirm(content: string, title: string) {
   });
 }
 
-// Status toggle 鈥?uses i18n keys from system.common (prefix-change / mid-change / suffix-change)
+// Status toggle — uses i18n keys from system.common (prefix-change / mid-change / suffix-change)
 async function onStatusChange(
   newStatus: number,
   row: SystemProductApi.SystemProduct,
@@ -782,7 +782,7 @@ async function onStatusChange(
   const label = newStatus === 1 ? $t("common.enabled") : $t("common.disabled");
   try {
     await confirm(
-      `${$t("system.common.prefix-change")} ${row.name} ${$t("system.common.mid-change")} ${$t("system.product.status")} ${$t("system.common.suffix-change")}銆?${label}銆?`,
+      `${$t("system.common.prefix-change")} ${row.name} ${$t("system.common.mid-change")} ${$t("system.product.status")} ${$t("system.common.suffix-change")}【 ${label}】?`,
       $t("common.edit"),
     );
     await updateProduct(row.id, { status: newStatus });
@@ -813,7 +813,7 @@ function onRefresh() {
 </template>
 ```
 
-**Read-Only (Log) module** (`index.vue` 鈥?no create button, no gridApi):
+**Read-Only (Log) module** (`index.vue` — no create button, no gridApi):
 
 ```vue
 <script lang="ts" setup>
@@ -823,7 +823,7 @@ import { getProductLogList } from "#/api";
 import { useColumns, useGridFormSchema } from "./data";
 
 const [Grid] = useVbenVxeGrid({
-  // 鈫?no gridApi destructured
+  // ← no gridApi destructured
   gridOptions: {
     columns: useColumns(),
     height: "auto",
@@ -841,7 +841,7 @@ const [Grid] = useVbenVxeGrid({
     toolbarConfig: {
       custom: true,
       export: false,
-      refresh: true, // 鈫?built-in refresh; no toolbar-actions slot needed
+      refresh: true, // ← built-in refresh; no toolbar-actions slot needed
       search: true,
       zoom: false,
     },
@@ -852,7 +852,7 @@ const [Grid] = useVbenVxeGrid({
 
 <template>
   <Page auto-content-height>
-    <!-- table-title is required for read-only pages 鈥?it makes the toolbar render -->
+    <!-- table-title is required for read-only pages — it makes the toolbar render -->
     <Grid :table-title="$t('system.productLog.list')" />
   </Page>
 </template>
@@ -860,57 +860,57 @@ const [Grid] = useVbenVxeGrid({
 
 ---
 
-## Step 14 鈥?Frontend: i18n Locales
+## Step 14 — Frontend: i18n Locales
 
-> **Error messages**: The backend returns a localized `message` (from `src/api/Jyz/Resources/EnumMessages.*.resx`, resolved by `Accept-Language`). Do **not** create frontend `error.json` files 鈥?the error toast in `request.ts` displays the backend `message` directly.
+> **Error messages**: The backend returns a localized `message` (from `src/api/Jyz/Resources/EnumMessages.*.resx`, resolved by `Accept-Language`). Do **not** create frontend `error.json` files — the error toast in `request.ts` displays the backend `message` directly.
 
 Update the locale files:
 
-### UI labels 鈥?field names, table headers, drawer titles
+### UI labels — field names, table headers, drawer titles
 
-`src/locales/langs/zh-CN/system.json` 鈥?add module key under the domain object:
+`src/locales/langs/zh-CN/system.json` — add module key under the domain object:
 
 ```json
 {
   "product": {
-    "title": "鍟嗗搧绠＄悊",
-    "list": "鍟嗗搧鍒楄〃",
-    "name": "鍟嗗搧鍚嶇О",
-    "price": "浠锋牸",
-    "status": "鐘舵€?,
-    "createdTime": "鍒涘缓鏃堕棿",
-    "operation": "鎿嶄綔"
+    "title": "商品管理",
+    "list": "商品列表",
+    "name": "商品名称",
+    "price": "价格",
+    "status": "状态",
+    "createdTime": "创建时间",
+    "operation": "操作"
   }
 }
 ```
 
-`src/locales/langs/en-US/system.json` 鈥?English equivalent.
+`src/locales/langs/en-US/system.json` — English equivalent.
 
 ### Page/menu titles (only if new route was added)
 
-`src/locales/langs/zh-CN/page.json` 鈥?add to corresponding domain:
+`src/locales/langs/zh-CN/page.json` — add to corresponding domain:
 
 ```json
 {
   "system": {
-    "product": "鍟嗗搧绠＄悊"
+    "product": "商品管理"
   }
 }
 ```
 
-`src/locales/langs/en-US/page.json` 鈥?English equivalent.
+`src/locales/langs/en-US/page.json` — English equivalent.
 
 ---
 
-## Step 15 鈥?Frontend: Unit Tests
+## Step 15 — Frontend: Unit Tests
 
 After the frontend code is in place, **add unit tests** for the testable business logic. Tests live alongside the code they cover under `__tests__/` folders and are picked up automatically by `pnpm test:unit` (vitest from the workspace root).
 
 ### What to test (priority order)
 
-1. **Pure logic in `data.ts`** 鈥?tree builders (e.g. `buildParentTree`), option factories, formatters. These are the highest-value tests because they have no UI dependencies.
-2. **API wrappers in `src/api/system/<domain>.ts`** 鈥?verify the correct HTTP method, URL, and payload are passed to `requestClient` via `vi.mock`.
-3. **Domain helpers** 鈥?any non-trivial transformation that lives outside Vue components.
+1. **Pure logic in `data.ts`** — tree builders (e.g. `buildParentTree`), option factories, formatters. These are the highest-value tests because they have no UI dependencies.
+2. **API wrappers in `src/api/system/<domain>.ts`** — verify the correct HTTP method, URL, and payload are passed to `requestClient` via `vi.mock`.
+3. **Domain helpers** — any non-trivial transformation that lives outside Vue components.
 
 > **Out of scope** for this guide: full Vue component / drawer / grid integration tests. Those typically require mounting heavy vben primitives and offer poor ROI on a CRUD scaffold.
 
@@ -944,7 +944,7 @@ describe("buildSomeTree", () => {
 
 ### API test pattern
 
-Use `vi.hoisted` to share mock functions between the (hoisted) `vi.mock` factory and the test bodies 鈥?referencing outer variables in the factory directly will throw `Cannot access 'x' before initialization`.
+Use `vi.hoisted` to share mock functions between the (hoisted) `vi.mock` factory and the test bodies — referencing outer variables in the factory directly will throw `Cannot access 'x' before initialization`.
 
 ```ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -984,19 +984,19 @@ describe("SystemProduct API", () => {
 });
 ```
 
-> The root `vitest.config.ts` already aliases `#` 鈫?`apps/web-antd/src`, so `#/...` imports work in tests.
+> The root `vitest.config.ts` already aliases `#` → `apps/web-antd/src`, so `#/...` imports work in tests.
 
 ### Test conventions
 
 - Use **lowercase** `describe` titles (rule `test/prefer-lowercase-title`).
-- Place all imports at the **top** of the file. The `vi.mock` call is hoisted automatically 鈥?it does **not** count as code "before" the import (rule `import/first`).
+- Place all imports at the **top** of the file. The `vi.mock` call is hoisted automatically — it does **not** count as code "before" the import (rule `import/first`).
 - One `__tests__/` folder per source folder; one `*.test.ts` file per source file.
 
 ---
 
-## Step 16 鈥?Verification: Lint, Type Check, Tests
+## Step 16 — Verification: Lint, Type Check, Tests
 
-Before considering the feature complete, run the full pipeline locally and ensure **all three** exit with code 0. CI runs the same commands on every PR 鈥?fixing failures locally is much faster.
+Before considering the feature complete, run the full pipeline locally and ensure **all three** exit with code 0. CI runs the same commands on every PR — fixing failures locally is much faster.
 
 ```pwsh
 # from repo root (or src/web)
@@ -1023,7 +1023,7 @@ Common failures and the fix:
 
 > **Backend mirror**: run `dotnet build` and `dotnet test` from `src/api` before committing if any backend file changed.
 
-### Backend coverage requirement (鈮?0% on new code)
+### Backend coverage requirement (≥90% on new code)
 
 Every backend change must keep new-code unit-test line coverage at **90% or above**. SonarCloud enforces this via the `sonar.coverage.exclusions` list in .github/workflows/gate.yml, which already excludes pure boilerplate that isn't worth unit-testing:
 
@@ -1066,19 +1066,19 @@ Test patterns to copy when adding tests for the listed components:
 - [ ] Options class + `OptionsExtension` registration added (if needed)
 - [ ] Service interface + implementation created
 - [ ] DI registered in `InjectionExtension`
-- [ ] Unit tests added for the new Service / Controller / Validators / filters / middleware (matching the patterns table); **new-code coverage 鈮?0%** when measured with `dotnet test --collect:"XPlat Code Coverage"`
+- [ ] Unit tests added for the new Service / Controller / Validators / filters / middleware (matching the patterns table); **new-code coverage ≥90%** when measured with `dotnet test --collect:"XPlat Code Coverage"`
 - [ ] Permission codes added to `PermissionCodes.cs` (module + actions), parent confirmed with user
 - [ ] Controller created, inheriting `CustomController`, with `[Permission]` on class and all actions
 
 ### Frontend
 
-- [ ] All new files live under `src/web/apps/web-antd/src/` 鈥?**no edits to** `src/web/packages/**`, `src/web/internal/**`, `src/web/scripts/**`, or `apps/web-antd/src/{main.ts,bootstrap.ts,preferences.ts,layouts/**}` (Vben framework code; see [src/web/AGENTS.md](../src/web/AGENTS.md) 搂"Modification Boundaries")
+- [ ] All new files live under `src/web/apps/web-antd/src/` — **no edits to** `src/web/packages/**`, `src/web/internal/**`, `src/web/scripts/**`, or `apps/web-antd/src/{main.ts,bootstrap.ts,preferences.ts,layouts/**}` (Vben framework code; see [src/web/AGENTS.md](../src/web/AGENTS.md) §"Modification Boundaries")
 - [ ] Router entry added (new file or child route in existing domain file)
 - [ ] API file created/extended in `src/api/system/`, exported from `src/api/system/index.ts`
 - [ ] `data.ts` created with `useFormSchema`, `useGridFormSchema`, `useColumns`
-- [ ] `modules/form.vue` created (drawer create/edit form) 鈥?CRUD only
+- [ ] `modules/form.vue` created (drawer create/edit form) — CRUD only
 - [ ] `index.vue` created (list page with VxeGrid using correct module type pattern)
-- [ ] Error messages added to the backend `Resources/EnumMessages.resx` (English) and `EnumMessages.zh-CN.resx` (Chinese) 鈥?no frontend `error.json`
+- [ ] Error messages added to the backend `Resources/EnumMessages.resx` (English) and `EnumMessages.zh-CN.resx` (Chinese) — no frontend `error.json`
 - [ ] `system.json` updated in both `zh-CN` and `en-US` with all UI labels
 - [ ] `page.json` updated in both locales if a new route/menu title was added
 - [ ] Unit tests added under `__tests__/` for `data.ts` pure logic and the new API module (Step 15)
@@ -1089,5 +1089,5 @@ Test patterns to copy when adding tests for the listed components:
 - [ ] `pnpm check:type` exits 0 in `src/web`
 - [ ] `pnpm test:unit` exits 0 in `src/web` (new tests are listed and passing)
 - [ ] `dotnet build` and `dotnet test` succeed from `src/api` (backend changes only)
-- [ ] Backend new-code unit-test coverage is **鈮?0%** (verify via SonarCloud PR decoration or `dotnet test --collect:"XPlat Code Coverage"`); boilerplate already excluded via `sonar.coverage.exclusions` in .github/workflows/gate.yml
+- [ ] Backend new-code unit-test coverage is **≥90%** (verify via SonarCloud PR decoration or `dotnet test --collect:"XPlat Code Coverage"`); boilerplate already excluded via `sonar.coverage.exclusions` in .github/workflows/gate.yml
 

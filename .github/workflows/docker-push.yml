@@ -1,4 +1,4 @@
-﻿name: Build and Push Docker Image
+name: Build and Push Docker Image
 
 on:
   push:
@@ -37,8 +37,8 @@ jobs:
           build-args: |
             VERSION=${{ github.ref_name }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/jfyu-api:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/jfyu-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/jyz-api:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/jyz-api:latest
 
   build-and-push-web:
     runs-on: ubuntu-latest
@@ -69,5 +69,5 @@ jobs:
           file: ./src/web/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/jfyu-web:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/jfyu-web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/jyz-web:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/jyz-web:latest
