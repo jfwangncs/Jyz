@@ -32,6 +32,21 @@ pnpm --filter @vben/web-antd dev
 
 Open the URL printed by Vite (default `http://localhost:5666`).
 
+## Release
+
+```powershell
+pwsh ./release.ps1              # releases both api and web
+pwsh ./release.ps1 -Target api  # releases only api
+pwsh ./release.ps1 -Target web  # releases only web
+```
+
+api and web release independently with their own version and tag (`api-1.2.0` / `web-1.2.0`) —
+bumping one side doesn't force-republish the other. Bump the version in `src/api/Jyz/Jyz.csproj`
+(`<Version>`) and/or `src/web/apps/web-antd/package.json` (`appVersion`) first, commit it, then run the
+command above. It checks out `master` and pulls the latest, resolves the version(s), shows you the exact
+tag(s) it's about to push, and waits for `y` confirmation before tagging and pushing — which triggers
+`.github/workflows/docker-push.yml` to build and push that side's Docker image.
+
 ## Further Documentation
 
 Each generated side carries its own detailed docs:
