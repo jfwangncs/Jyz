@@ -1,6 +1,5 @@
 import { requestClient } from '#/api/request';
 
-/** Dictionary type/item request params and payload shapes. */
 export namespace SystemDictApi {
   export interface DictItem {
     id: number;

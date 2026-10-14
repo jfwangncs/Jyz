@@ -2,7 +2,6 @@ import type { Recordable } from '@vben/types';
 
 import { requestClient } from '#/api/request';
 
-/** Role and role-permission request/response shapes. */
 export namespace SystemRoleApi {
   export interface SystemRolePermission {
     id: number;
