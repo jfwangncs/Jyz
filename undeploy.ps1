@@ -13,7 +13,7 @@
   Deletes in this order, which matters:
     1. The ArgoCD Application (k8s/<slug>-application.yaml) and the ImageUpdater
        (k8s/<slug>-image-updater.yaml) first. The Application has `syncPolicy.automated` with
-       `prune: true` and `selfHeal: true` — if you deleted the Rollout/Service/Ingress/ConfigMap
+       `prune: true` and `selfHeal: true` — if you deleted the Rollout/Service/Ingress
        directly first, while the Application still exists, ArgoCD would just sync them straight
        back. Deleting the Application itself removes ArgoCD's management of this app, and (since
        the Application resource's own deletion cascades via ArgoCD's finalizer) it also cleans
@@ -78,7 +78,7 @@ Write-Host "  ArgoCD Application '$DockerImageSlug' (namespace: argocd)"
 if (Test-Path $imageUpdaterPath) {
   Write-Host "  ArgoCD ImageUpdater '$DockerImageSlug' (namespace: argocd)"
 }
-Write-Host "  -> which will cascade-delete every Rollout/Service/Ingress/ConfigMap this app owns in namespace '$Namespace'"
+Write-Host "  -> which will cascade-delete every Rollout/Service/Ingress this app owns in namespace '$Namespace'"
 Write-Host "  Secret '$SecretName' (namespace: $Namespace)"
 Write-Host ""
 $confirmation = Read-Host "Proceed? [y/N]"

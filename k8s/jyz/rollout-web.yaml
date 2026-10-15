@@ -22,12 +22,6 @@ spec:
           env:
             - name: TZ
               value: "Asia/Shanghai"
-            - name: API_BASE_URL
-              value: "https://jyz-api.xiaofengyu.com"
-          volumeMounts:
-            - name: entrypoint
-              mountPath: /docker-entrypoint.d/90-runtime-config.sh
-              subPath: 90-runtime-config.sh
           readinessProbe:
             httpGet:
               path: /
@@ -52,18 +46,10 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
-      volumes:
-        - name: entrypoint
-          configMap:
-            name: jyz-web-entrypoint
-            defaultMode: 0755
   strategy:
     canary:
       maxSurge: 1
       maxUnavailable: 0
       steps:
-        - setWeight: 20
-        - pause: {}
-        - setWeight: 50
-        - pause: { duration: 5m }
         - setWeight: 100
+

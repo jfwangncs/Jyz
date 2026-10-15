@@ -7,13 +7,12 @@ resources:
   - rollout-api.yaml
   - service-api.yaml
   - ingress-api.yaml
-  - configmap-web.yaml
   - rollout-web.yaml
   - service-web.yaml
   - ingress-web.yaml
 
 images:
   - name: jfwangncs/jyz-api
-    newTag: "1.0.1"
+    newTag: "1.0.3"
   - name: jfwangncs/jyz-web
     newTag: "1.1.2"

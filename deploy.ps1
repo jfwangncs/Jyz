@@ -210,14 +210,6 @@ if ($deployFrontend) {
   $webHost = Read-Default -Prompt "Hostname for the web Ingress" -Default $(if ($isInternalWeb) { "$DockerImageSlug.internal.xiaofengyu.com" } else { "$DockerImageSlug.xiaofengyu.com" })
 }
 
-# ── Frontend: backend API URL the browser should call ────────────────────────
-$apiBaseUrl = $null
-if ($deployFrontend) {
-  $apiScheme = if ($isInternalApi) { "http" } else { "https" }
-  $suggestedApiUrl = if ($apiHost) { "$apiScheme`://$apiHost" } else { "$apiScheme`://CHANGE_ME" }
-  $apiBaseUrl = Read-Default -Prompt "Backend API base URL the frontend should call" -Default $suggestedApiUrl
-}
-
 # ── Replica count + canary rollout strategy ───────────────────────────────────
 $apiReplicas = $null
 $webReplicas = $null
@@ -464,12 +456,6 @@ spec:
           env:
             - name: TZ
               value: "Asia/Shanghai"
-            - name: API_BASE_URL
-              value: "$apiBaseUrl"
-          volumeMounts:
-            - name: entrypoint
-              mountPath: /docker-entrypoint.d/90-runtime-config.sh
-              subPath: 90-runtime-config.sh
           readinessProbe:
             httpGet:
               path: /
@@ -494,11 +480,6 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "200m"
-      volumes:
-        - name: entrypoint
-          configMap:
-            name: $DockerImageSlug-web-entrypoint
-            defaultMode: 0755
   strategy:
     canary:
       maxSurge: 1
@@ -507,33 +488,6 @@ spec:
 $canarySteps
 "@
   Set-Content -Path (Join-Path $appDir "rollout-web.yaml") -Value $webRolloutContent -Encoding utf8
-
-  # Regenerates Vben's own runtime-config file (_app.config.js, loaded via a <script> tag at
-  # startup — see src/vue/internal/vite-config/src/plugins/extra-app-config.ts) from an env var,
-  # so the same image works in any environment without a rebuild. The official nginx image already
-  # runs every *.sh under /docker-entrypoint.d/ before starting nginx, so no Dockerfile change is
-  # needed — this script is mounted there via a ConfigMap.
-  $entrypointScript = @'
-#!/bin/sh
-set -eu
-CONFIG_FILE="/usr/share/nginx/html/_app.config.js"
-cat > "$CONFIG_FILE" <<EOF
-window._VBEN_ADMIN_PRO_APP_CONF_={"VITE_GLOB_API_URL":"${API_BASE_URL}"};
-Object.freeze(window._VBEN_ADMIN_PRO_APP_CONF_);
-Object.defineProperty(window, "_VBEN_ADMIN_PRO_APP_CONF_", { configurable: false, writable: false });
-EOF
-'@
-
-  $webConfigMapContent = @"
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: $DockerImageSlug-web-entrypoint
-data:
-  90-runtime-config.sh: |
-$(($entrypointScript -split "`n" | ForEach-Object { "    $_" }) -join "`n")
-"@
-  Set-Content -Path (Join-Path $appDir "configmap-web.yaml") -Value $webConfigMapContent -Encoding utf8
 
   $webServiceContent = @"
 apiVersion: v1
@@ -579,13 +533,12 @@ spec:
 "@
   Set-Content -Path (Join-Path $appDir "ingress-web.yaml") -Value $webIngressContent -Encoding utf8
 
-  $kustomizeResources.Add("configmap-web.yaml")
   $kustomizeResources.Add("rollout-web.yaml")
   $kustomizeResources.Add("service-web.yaml")
   $kustomizeResources.Add("ingress-web.yaml")
   $kustomizeImages.Add("  - name: $webImage`n    newTag: `"$webTag`"")
 
-  Write-Host "Wrote: k8s/$DockerImageSlug/configmap-web.yaml, rollout-web.yaml, service-web.yaml, ingress-web.yaml" -ForegroundColor Green
+  Write-Host "Wrote: k8s/$DockerImageSlug/rollout-web.yaml, service-web.yaml, ingress-web.yaml" -ForegroundColor Green
 }
 
 $kustomizationContent = @"

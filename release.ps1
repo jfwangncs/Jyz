@@ -7,21 +7,21 @@
 .DESCRIPTION
   Reads the api version from `src/api/Jyz/Jyz.csproj`'s `<Version>` and the web
   version from `src/web/apps/web-antd/package.json`'s `appVersion` — they are independent, so bump
-  whichever side(s) changed before running this. Prompts for which side to release (Enter = both); pass `-Target api` or
-  `-Target web` to skip the prompt and release just one side (e.g. a frontend-only style fix shouldn't force-republish an
+  whichever side(s) changed before running this. Defaults to releasing both; pass `-Target api` or
+  `-Target web` to release just one side (e.g. a frontend-only style fix shouldn't force-republish an
   unchanged backend image). Before resolving versions, checks out `-Branch` (default `master`) and
   pulls the latest from `-Remote`, so the tag always points at the real tip of the release branch —
   not whatever happened to be checked out locally. Shows the resolved tag(s) and asks for confirmation
   before tagging or pushing anything.
 
 .EXAMPLE
-  ./release.ps1              # asks which target to release (Enter = both)
+  ./release.ps1              # releases both api and web
 .EXAMPLE
   ./release.ps1 -Target web  # releases only web
 #>
 param(
   [ValidateSet('api', 'web', 'both')]
-  [string]$Target,
+  [string]$Target = 'both',
   [string]$Remote = "origin",
   [string]$Branch = "master"
 )
@@ -29,13 +29,6 @@ $ErrorActionPreference = "Stop"
 
 $RepoRoot = $PSScriptRoot
 
-if (-not $Target) {
-  $choice = Read-Host "Release which target? [api/web/both] (default: both)"
-  $Target = if ([string]::IsNullOrWhiteSpace($choice)) { 'both' } else { $choice.Trim().ToLower() }
-}
-if ($Target -notin @('api', 'web', 'both')) {
-  throw "Invalid target '$Target' — must be api, web, or both."
-}
 function Sync-ReleaseBranch {
   $dirty = git -C $RepoRoot status --porcelain
   if ($dirty) {
