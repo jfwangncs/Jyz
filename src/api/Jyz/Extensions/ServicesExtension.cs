@@ -289,7 +289,7 @@ namespace Jyz.Extensions
             {
                 options.AddPolicy("AllowAll", builder =>
                 {
-                    builder.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+                    builder.SetIsOriginAllowed(origin => new Uri(origin).Host == "jyz.xiaofengyu.com")
                            .AllowAnyMethod()
                            .AllowAnyHeader();
                 });
