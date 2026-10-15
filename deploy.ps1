@@ -420,12 +420,45 @@ spec:
 "@
   Set-Content -Path (Join-Path $appDir "ingress-api.yaml") -Value $apiIngressContent -Encoding utf8
 
+  # Prometheus scrapes the pod directly (prometheus.io/* annotations -> pod IP:8080), never through
+  # the Ingress. Without this, /metrics would be reachable on the public api host. A separate Ingress
+  # for just /metrics (more specific path than "/") with a whitelist of 127.0.0.1 makes ingress-nginx
+  # answer 403 to every external client, without needing snippet annotations (disabled by default
+  # in recent ingress-nginx releases).
+  if ($hasTelemetry) {
+    $apiMetricsBlockContent = @"
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $DockerImageSlug-api-metrics-block
+  annotations:
+    nginx.ingress.kubernetes.io/whitelist-source-range: "127.0.0.1/32"
+    nginx.ingress.kubernetes.io/ssl-redirect: "$(if ($isInternalApi) { "false" } else { "true" })"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: $apiHost
+      http:
+        paths:
+          - path: /metrics
+            pathType: Prefix
+            backend:
+              service:
+                name: $DockerImageSlug-api
+                port:
+                  number: 80
+"@
+    Set-Content -Path (Join-Path $appDir "ingress-api-metrics-block.yaml") -Value $apiMetricsBlockContent -Encoding utf8
+  }
+
   $kustomizeResources.Add("rollout-api.yaml")
   $kustomizeResources.Add("service-api.yaml")
   $kustomizeResources.Add("ingress-api.yaml")
+  if ($hasTelemetry) { $kustomizeResources.Add("ingress-api-metrics-block.yaml") }
   $kustomizeImages.Add("  - name: $apiImage`n    newTag: `"$apiTag`"")
 
-  Write-Host "Wrote: k8s/$DockerImageSlug/rollout-api.yaml, service-api.yaml, ingress-api.yaml" -ForegroundColor Green
+  Write-Host "Wrote: k8s/$DockerImageSlug/rollout-api.yaml, service-api.yaml, ingress-api.yaml$(if ($hasTelemetry) { ', ingress-api-metrics-block.yaml' })" -ForegroundColor Green
 }
 
 if ($deployFrontend) {
