@@ -76,7 +76,7 @@ function Get-ApiVersion {
 function Get-WebVersion {
   $packageJsonPath = Join-Path $RepoRoot "src/web/apps/web-antd/package.json"
   if (-not (Test-Path $packageJsonPath)) { throw "Frontend package.json not found: $packageJsonPath" }
-  $version = (Get-Content $packageJsonPath -Raw | ConvertFrom-Json).appVersion
+  $version = (Get-Content $packageJsonPath -Raw -Encoding UTF8 | ConvertFrom-Json).appVersion
   if ([string]::IsNullOrWhiteSpace($version)) { throw "appVersion not found in $packageJsonPath — this is our own field, distinct from the vendored Vben 'version'" }
   return $version
 }

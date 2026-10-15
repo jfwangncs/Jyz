@@ -212,7 +212,8 @@ namespace Jyz.Extensions
                 op.ExcludePathStartsWith.Add("/scalar");
                 op.ExcludePathStartsWith.Add("/openapi");
                 op.ExcludePathStartsWith.Add("/metrics");
-                op.ExcludePathStartsWith.Add("/health");
+                op.ExcludePathStartsWith.Add("/api/health");
+                op.ExcludePathStartsWith.Add("/api/version");
                 op.IncludeUnmatchedRoutes = true;
             });
 #pragma warning restore EXTEXP0013
