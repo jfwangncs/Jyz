@@ -7,8 +7,8 @@
 .DESCRIPTION
   Reads the api version from `src/api/Jyz/Jyz.csproj`'s `<Version>` and the web
   version from `src/web/apps/web-antd/package.json`'s `appVersion` — they are independent, so bump
-  whichever side(s) changed before running this. Defaults to releasing both; pass `-Target api` or
-  `-Target web` to release just one side (e.g. a frontend-only style fix shouldn't force-republish an
+  whichever side(s) changed before running this. Prompts for api / web / both (default both) unless
+  `-Target api|web|both` is passed, to release just one side (e.g. a frontend-only style fix shouldn't force-republish an
   unchanged backend image). Before resolving versions, checks out `-Branch` (default `master`) and
   pulls the latest from `-Remote`, so the tag always points at the real tip of the release branch —
   not whatever happened to be checked out locally. Shows the resolved tag(s) and asks for confirmation
@@ -21,7 +21,7 @@
 #>
 param(
   [ValidateSet('api', 'web', 'both')]
-  [string]$Target = 'both',
+  [string]$Target,
   [string]$Remote = "origin",
   [string]$Branch = "master"
 )
@@ -83,6 +83,18 @@ function Get-WebVersion {
 
 Sync-ReleaseBranch
 
+if (-not $Target) {
+  Write-Host "What do you want to release?" -ForegroundColor Cyan
+  Write-Host "  1) api"
+  Write-Host "  2) web"
+  Write-Host "  3) both (default)"
+  $choice = Read-Host "Select [1-3]"
+  $Target = switch ($choice) {
+    '1' { 'api' }
+    '2' { 'web' }
+    default { 'both' }
+  }
+}
 $releases = [System.Collections.Generic.List[object]]::new()
 if ($Target -eq 'api' -or $Target -eq 'both') { $releases.Add([PSCustomObject]@{ Prefix = 'api'; Version = (Get-ApiVersion) }) }
 if ($Target -eq 'web' -or $Target -eq 'both') { $releases.Add([PSCustomObject]@{ Prefix = 'web'; Version = (Get-WebVersion) }) }
