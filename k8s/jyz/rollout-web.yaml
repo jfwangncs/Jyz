@@ -1,0 +1,69 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: jyz-web
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: jyz-web
+  template:
+    metadata:
+      labels:
+        app: jyz-web
+    spec:
+      containers:
+        - name: jyz-web
+          image: jfwangncs/jyz-web:1.1.2
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: API_BASE_URL
+              value: "https://jyz-api.xiaofengyu.com"
+          volumeMounts:
+            - name: entrypoint
+              mountPath: /docker-entrypoint.d/90-runtime-config.sh
+              subPath: 90-runtime-config.sh
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "10m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: entrypoint
+          configMap:
+            name: jyz-web-entrypoint
+            defaultMode: 0755
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+        - setWeight: 20
+        - pause: {}
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100

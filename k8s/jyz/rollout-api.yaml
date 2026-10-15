@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: jyz-api
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: jyz-api
+  template:
+    metadata:
+      labels:
+        app: jyz-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: jyz-api
+          image: jfwangncs/jyz-api:1.0.1
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: OTEL_SERVICE_NAME
+              value: "jyz-api"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://tempo.observability.svc.cluster.local:4317"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_TRACES_SAMPLER
+              value: "always_on"
+          envFrom:
+            - secretRef:
+                name: jyz-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "20m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+        - setWeight: 20
+        - pause: {}
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100

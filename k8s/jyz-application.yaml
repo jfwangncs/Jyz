@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jyz
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jfwangncs/ArgoCD.git
+    targetRevision: master
+    path: jyz
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jyz
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  revisionHistoryLimit: 10

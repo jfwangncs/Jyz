@@ -1,0 +1,22 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: jyz
+  namespace: argocd
+spec:
+  namespace: argocd
+  writeBackConfig:
+    method: git
+    gitConfig:
+      branch: master
+  applicationRefs:
+    - namePattern: jyz
+      images:
+        - alias: jyz-api
+          imageName: jfwangncs/jyz-api
+          commonUpdateSettings:
+            updateStrategy: "semver"
+        - alias: jyz-web
+          imageName: jfwangncs/jyz-web
+          commonUpdateSettings:
+            updateStrategy: "semver"
